@@ -10,3 +10,4 @@ export * from './po-page-dynamic-search/index';
 export * from './po-page-dynamic-table/index';
 export * from './po-page-job-scheduler/index';
 export * from './po-page-login/index';
+export * from './po-page-customization/index';

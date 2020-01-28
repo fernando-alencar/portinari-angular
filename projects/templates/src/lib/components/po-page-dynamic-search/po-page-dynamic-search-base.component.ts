@@ -1,3 +1,4 @@
+import { UrlOrPoCustomizationFunction } from './../po-page-customization/po-page-options';
 import { EventEmitter, Input, Output } from '@angular/core';
 
 import { PoBreadcrumb, PoDynamicFormField, PoPageAction } from '@portinari/portinari-ui';
@@ -57,6 +58,38 @@ export class PoPageDynamicSearchBaseComponent {
   get filters(): Array<PoDynamicFormField> {
     return this._filters;
   }
+
+  /**
+   * Função ou serviço que será executado na inicialização do componente.
+   *
+   * A propriedade aceita os seguintes tipos:
+   * - `string`: *Endpoint* usado pelo componente para requisição via `POST`.
+   * - `function`: Método que será executado.
+   *
+   * O retorno desta função deve ser do tipo [PoPageOptions](documentation/po-page-option#po-page-option),
+   * onde o usuário poderá customizar novos filtros, breadcrumb, title e actions
+   *
+   * Por exemplo:
+   *
+   * ```
+   * getPageOptions():PoPageOptions {
+   * return {
+   *   actions: [
+   *     { label: 'Find on Google' },
+   *   ],
+   *   filters: [
+   *     { property: 'idCard', gridColumns: 6 }
+   *   ]
+   * };
+   * }
+   *
+   * ```
+   * Para referenciar a sua função utilize a propriedade `bind`, por exemplo:
+   * ```
+   *  [p-on-load]="onLoadOptions.bind(this)"
+   * ```
+   */
+  @Input('p-on-load') onLoad: UrlOrPoCustomizationFunction;
 
   /** Título da página. */
   @Input('p-title') title: string;

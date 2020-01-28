@@ -5,7 +5,9 @@
   [p-filters]="filters"
   (p-change-disclaimers)="onChangeDisclaimers($event)"
   (p-quick-search)="onQuickSearch($event)"
-  (p-advanced-search)="onAdvancedSearch($event)">
+  (p-advanced-search)="onAdvancedSearch($event)"
+  [p-on-load]="onLoadFields.bind(this)"
+  >
 
   <po-table
     p-checkbox

@@ -124,4 +124,7 @@ export class SamplePoPageDynamicSearchHiringProcessesComponent implements OnInit
     this.filters[3].options = this.jobDescriptionOptions;
   }
 
+  onLoadFields() {
+    return this.sampleHiringProcessesService.getPageOptions();
+  }
 }

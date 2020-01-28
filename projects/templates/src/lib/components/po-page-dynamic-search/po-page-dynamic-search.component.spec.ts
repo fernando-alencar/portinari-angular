@@ -1,4 +1,5 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { PoPageCustomizationModule } from './../po-page-customization/po-page-customization.module';
+import { ComponentFixture, TestBed, async, fakeAsync, tick } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { RouterTestingModule } from '@angular/router/testing';
 import { Routes } from '@angular/router';
@@ -21,7 +22,8 @@ describe('PoPageDynamicSearchComponent:', () => {
     TestBed.configureTestingModule({
       imports: [
         FormsModule,
-        RouterTestingModule.withRoutes(routes)
+        RouterTestingModule.withRoutes(routes),
+        PoPageCustomizationModule
       ],
       declarations: [
         PoPageDynamicSearchComponent,
@@ -39,7 +41,6 @@ describe('PoPageDynamicSearchComponent:', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(PoPageDynamicSearchComponent);
     component = fixture.componentInstance;
-
     fixture.detectChanges();
   });
 
@@ -338,6 +339,65 @@ describe('PoPageDynamicSearchComponent:', () => {
       expect(result).toBe('test value 1');
     });
 
+    describe('ngOnInit:', () => {
+      it('should configure properties based on the return of onload function', fakeAsync(() => {
+        component.actions = [
+          { label: 'Feature 1', url: '/feature1' },
+          { label: 'Feature 2', url: '/feature2' }
+        ];
+        component.breadcrumb = {
+          items: [
+            { label: 'Home' },
+            { label: 'Hiring processes' }
+          ]
+        };
+        component.filters = [
+          { property: 'filter1' },
+          { property: 'filter2' }
+        ];
+        component.title = 'Original Title';
+
+        component.onLoad = () => {
+          return {
+            title: 'New Title',
+            breadcrumb: {
+              items: [
+                { label: 'Test' },
+                { label: 'Test2' }
+              ]
+            },
+            actions: [
+              { label: 'Feature 1', url: '/new-feature1' },
+              { label: 'Feature 3', url: '/new-feature3' }
+            ],
+            filters: [
+              { property: 'filter1' },
+              { property: 'filter3' }
+            ]
+          };
+        };
+
+        component.ngOnInit();
+        tick();
+        expect(component.title).toBe('New Title');
+        expect(component.actions).toEqual([
+          { label: 'Feature 1', url: '/new-feature1' },
+          { label: 'Feature 2', url: '/feature2' },
+          { label: 'Feature 3', url: '/new-feature3' }
+        ]);
+        expect(component.filters).toEqual([
+          { property: 'filter1' },
+          { property: 'filter2' },
+          { property: 'filter3' }
+        ]);
+        expect(component.breadcrumb).toEqual({
+          items: [
+            { label: 'Test' },
+            { label: 'Test2' }
+          ]
+        });
+      }));
+    });
   });
 
 });

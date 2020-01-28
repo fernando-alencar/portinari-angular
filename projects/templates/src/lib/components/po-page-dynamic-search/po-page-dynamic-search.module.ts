@@ -7,6 +7,7 @@ import { PoDynamicModule, PoModalModule, PoPageModule } from '@portinari/portina
 
 import { PoAdvancedFilterComponent } from './po-advanced-filter/po-advanced-filter.component';
 import { PoPageDynamicSearchComponent } from './po-page-dynamic-search.component';
+import { PoPageCustomizationModule } from '../po-page-customization/po-page-customization.module';
 
 /**
  * @description
@@ -21,7 +22,8 @@ import { PoPageDynamicSearchComponent } from './po-page-dynamic-search.component
 
     PoDynamicModule,
     PoModalModule,
-    PoPageModule
+    PoPageModule,
+    PoPageCustomizationModule
   ],
   declarations: [
     PoAdvancedFilterComponent,

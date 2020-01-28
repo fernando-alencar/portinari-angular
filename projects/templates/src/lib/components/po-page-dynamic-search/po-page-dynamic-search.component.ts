@@ -1,4 +1,6 @@
-import { Component, ViewChild } from '@angular/core';
+import { Observable, Subscription } from 'rxjs';
+import { PoPageOptions, UrlOrPoCustomizationFunction } from './../po-page-customization/po-page-options';
+import { Component, ViewChild, OnInit, OnDestroy } from '@angular/core';
 
 import { PoDisclaimerGroup, PoDynamicFieldType, PoDynamicFormField, PoPageFilter } from '@portinari/portinari-ui';
 
@@ -6,6 +8,7 @@ import { capitalizeFirstLetter, getBrowserLanguage } from '../../utils/util';
 
 import { PoAdvancedFilterComponent } from './po-advanced-filter/po-advanced-filter.component';
 import { PoPageDynamicSearchBaseComponent } from './po-page-dynamic-search-base.component';
+import { PoPageCustomizationService } from '../po-page-customization/po-page-customization.service';
 
 /**
  * @docsExtends PoPageDynamicSearchBaseComponent
@@ -27,7 +30,9 @@ import { PoPageDynamicSearchBaseComponent } from './po-page-dynamic-search-base.
   selector: 'po-page-dynamic-search',
   templateUrl: './po-page-dynamic-search.component.html'
 })
-export class PoPageDynamicSearchComponent extends PoPageDynamicSearchBaseComponent {
+export class PoPageDynamicSearchComponent extends PoPageDynamicSearchBaseComponent implements OnInit, OnDestroy {
+
+  private _onLoadSub: Subscription;
 
   private readonly _disclaimerGroup: PoDisclaimerGroup = {
     change: this.onChangeDisclaimerGroup.bind(this),
@@ -57,6 +62,22 @@ export class PoPageDynamicSearchComponent extends PoPageDynamicSearchBaseCompone
     this._filterSettings.advancedAction = this.filters.length === 0 ? undefined : 'onAdvancedAction';
 
     return Object.assign({}, this._filterSettings);
+  }
+
+  constructor(private poPageCustomizationService: PoPageCustomizationService) {
+    super();
+  }
+
+  ngOnInit() {
+    if (this.onLoad) {
+      this.loadOptionsOnInitialize(this.onLoad);
+    }
+  }
+
+  ngOnDestroy() {
+    if (this._onLoadSub) {
+      this._onLoadSub.unsubscribe();
+    }
   }
 
   onAction() {
@@ -143,4 +164,20 @@ export class PoPageDynamicSearchComponent extends PoPageDynamicSearchBaseCompone
     return disclaimers;
   }
 
+  private loadOptionsOnInitialize(onLoad: UrlOrPoCustomizationFunction) {
+
+    this._onLoadSub = this.getPoPageOptions(onLoad).subscribe(responsePoOption =>
+        this.poPageCustomizationService.changeOriginalOptionsToNewOptions(this, responsePoOption));
+  }
+
+  private getPoPageOptions(onLoad: UrlOrPoCustomizationFunction): Observable<PoPageOptions> {
+    const originalOption: PoPageOptions = {
+      title: this.title,
+      actions: this.actions,
+      breadcrumb: this.breadcrumb,
+      filters: this.filters
+    };
+
+    return this.poPageCustomizationService.getCustomOptions(onLoad, originalOption);
+  }
 }
