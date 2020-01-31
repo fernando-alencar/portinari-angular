@@ -4,8 +4,9 @@ import { AbstractControl, NG_VALUE_ACCESSOR, NG_VALIDATORS } from '@angular/form
 import { convertToInt } from '../../../utils/util';
 import { PoInputBaseComponent } from '../po-input/po-input-base.component';
 
-const PO_DECIMAL_DEFAULT_DECIMALS_LENGTH = 2;
-const PO_DECIMAL_DEFAULT_THOUSAND_MAXLENGTH = 13;
+const poDecimalDefaultDecimalsLength = 2;
+const poDecimalDefaultThousandMaxlength = 13;
+const poDecimalTotalLengthLimit = 16;
 
 /**
  *
@@ -13,13 +14,17 @@ const PO_DECIMAL_DEFAULT_THOUSAND_MAXLENGTH = 13;
  *
  * @description
  *
- * po-decimal é um input específico para receber apenas números decimais.
- * Quando utilizado, o componente terá comportamento de um campo de 'text' com algumas características:
+ * <br>
+ * - O `po-decimal` é um *input* específico para receber apenas números decimais, por isso recebe as seguintes características:
+ *  + Aceita apenas números;
+ *  + Utiliza ',' como separador de decimal;
+ *  + Utiliza '.' para separação de milhar;
+ *  + É possível configurar a quantidade de casas decimais e a quantidade de digitos do campo.
  *
- * - Aceita apenas números;
- * - Utiliza ',' como separador de decimal;
- * - Utiliza '.' para separação de milhar;
- * - É possível configurar a quantidade de casas decimais e a quantidade de digitos do campo.
+ * > **Importante:**
+ * Atualmente o JavaScript limita-se à um conjunto de dados de `32 bits`, e para que os valores comportem-se devidamente,
+ * o `po-decimal` contém um tratamento que limita em 16 o número total de casas antes e após a vírgula.
+ * Veja abaixo as demais regras nas documentações de `p-decimals-length` e `p-thousand-maxlength`.
  *
  * @example
  *
@@ -61,9 +66,10 @@ const PO_DECIMAL_DEFAULT_THOUSAND_MAXLENGTH = 13;
 })
 export class PoDecimalComponent extends PoInputBaseComponent implements AfterViewInit {
 
-  private _decimalsLength?: number = PO_DECIMAL_DEFAULT_DECIMALS_LENGTH;
-  private _thousandMaxlength?: number = PO_DECIMAL_DEFAULT_THOUSAND_MAXLENGTH;
+  private _decimalsLength?: number = poDecimalDefaultDecimalsLength;
+  private _thousandMaxlength?: number = poDecimalDefaultThousandMaxlength;
 
+  private copyDecimalsLength: number = this.decimalsLength;
   private decimalSeparator: string = ',';
   private fireChange: boolean = false;
   private isKeyboardAndroid: boolean = false;
@@ -90,11 +96,23 @@ export class PoDecimalComponent extends PoInputBaseComponent implements AfterVie
    *
    * Quantidade máxima de casas decimais.
    *
+   * > **Importante:**
+   * - O valor máximo permitido é 15;
+   * - A soma total de `p-decimals-length` com `p-thousand-maxlength` limita-se à 16;
+   * - Para definir um valor acima de 3 é necessário que `p-thousand-maxlength` tenha definido um valor abaixo de 13;
+   *
    * @default `2`
    */
   @Input('p-decimals-length') set decimalsLength(value: number) {
-    this._decimalsLength = convertToInt(value, PO_DECIMAL_DEFAULT_DECIMALS_LENGTH);
+    let decimalsValue = convertToInt(value, poDecimalDefaultDecimalsLength);
 
+    this.copyDecimalsLength = decimalsValue;
+
+    if (this.isGreaterThanTotalLengthLimit(decimalsValue, this.thousandMaxlength)) {
+      decimalsValue = poDecimalTotalLengthLimit - this.thousandMaxlength;
+    }
+
+    this._decimalsLength = decimalsValue;
   }
 
   get decimalsLength() {
@@ -106,15 +124,26 @@ export class PoDecimalComponent extends PoInputBaseComponent implements AfterVie
    *
    * @description
    *
-   * Número máximo de dígitos antes do separador de decimal. O valor máximo possível deve ser menor ou igual a 13.
+   * Quantidade máxima de dígitos antes do separador decimal.
+   *
+   * > **Importante:**
+   * - O valor máximo permitido é 13;
+   * - A soma total de `p-decimals-length` com `p-thousand-maxlength` limita-se à 16;
+   * - Esta propriedade sobrepõe o valor definido em `p-decimals-length`.
    *
    * @default `13`
    */
   @Input('p-thousand-maxlength') set thousandMaxlength(value: number) {
-    const thousandMaxlength = convertToInt(value, PO_DECIMAL_DEFAULT_THOUSAND_MAXLENGTH);
+    const thousandMaxlength = convertToInt(value, poDecimalDefaultThousandMaxlength);
 
-    this._thousandMaxlength = thousandMaxlength <= PO_DECIMAL_DEFAULT_THOUSAND_MAXLENGTH ?
-    thousandMaxlength : PO_DECIMAL_DEFAULT_THOUSAND_MAXLENGTH;
+    if (this.isGreaterThanTotalLengthLimit(this.decimalsLength, thousandMaxlength)) {
+      this._decimalsLength = poDecimalTotalLengthLimit - thousandMaxlength;
+    } else {
+      this._decimalsLength = this.copyDecimalsLength;
+    }
+
+    this._thousandMaxlength = thousandMaxlength <= poDecimalDefaultThousandMaxlength ?
+    thousandMaxlength : poDecimalDefaultThousandMaxlength;
   }
 
   get thousandMaxlength() {
@@ -412,6 +441,10 @@ export class PoDecimalComponent extends PoInputBaseComponent implements AfterVie
       this.verifyValueAfterComma(event) || this.verifyInsertMinusSign(event) ||
       this.hasMinusSignInvalidPosition(event) || isInvalidNumber ||
       this.validateCursorPositionBeforeSeparator(event) || this.verifyDecimalLengthIsZeroAndKeyPressedIsComma(charCode);
+  }
+
+  private isGreaterThanTotalLengthLimit(decimalsMaxLength: number, thousandMaxlength: number) {
+    return (decimalsMaxLength + thousandMaxlength) > poDecimalTotalLengthLimit;
   }
 
   private isKeyDecimalSeparator(event) {

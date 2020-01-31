@@ -65,13 +65,15 @@ describe('PoDecimalComponent:', () => {
     expectPropertiesValues(component, 'decimalsLength', invalidValues, 2);
   });
 
-  it('should update property `p-decimals-length` with valid values', () => {
-    const validValues = [0, 4];
-
+  it('decimals-length: should update property with valid values', () => {
+    let validValues = [0, 3];
+    expectPropertiesValues(component, 'decimalsLength', validValues, validValues);
+    validValues = [3, 15];
+    component.thousandMaxlength = 1;
     expectPropertiesValues(component, 'decimalsLength', validValues, validValues);
   });
 
-  it('should update property `p-thousand-maxlength` with `13` if invalid values', () => {
+  it('should update property with `13` if invalid values', () => {
     const invalidValues = [undefined, null, '', true, false, 'string', [], {}, 15];
 
     expectPropertiesValues(component, 'thousandMaxlength', invalidValues, 13);
@@ -1249,6 +1251,28 @@ describe('PoDecimalComponent:', () => {
 
     it('hasLetters: should return true with undefined value.', () => {
       expect(component.hasLetters(undefined)).toBeFalsy();
+    });
+
+    it('isGreaterThanTotalLengthLimit: should return `false` if total sum is 16.', () => {
+      let decimalsMaxLength = 1;
+      let thousandMaxlength = 15;
+      expect(component['isGreaterThanTotalLengthLimit'](decimalsMaxLength, thousandMaxlength)).toBe(false);
+
+      decimalsMaxLength = 14;
+      thousandMaxlength = 2;
+      expect(component['isGreaterThanTotalLengthLimit'](decimalsMaxLength, thousandMaxlength)).toBe(false);
+    });
+
+    it('isGreaterThanTotalLengthLimit: should return `true` if total sum is greater than 16.', () => {
+      const decimalsMaxLength = 13;
+      const thousandMaxlength = 4;
+      expect(component['isGreaterThanTotalLengthLimit'](decimalsMaxLength, thousandMaxlength)).toBe(true);
+    });
+
+    it('isGreaterThanTotalLengthLimit: should return `false` if total sum is less than 16.', () => {
+      const decimalsMaxLength = 3;
+      const thousandMaxlength = 6;
+      expect(component['isGreaterThanTotalLengthLimit'](decimalsMaxLength, thousandMaxlength)).toBe(false);
     });
 
   });
