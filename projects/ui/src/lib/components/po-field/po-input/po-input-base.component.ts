@@ -418,4 +418,9 @@ export abstract class PoInputBaseComponent implements ControlValueAccessor, Vali
     }
   }
 
+  setDisabledState(isDisabled: boolean){
+    this.disabled = (isDisabled)
+    this.validateModel();
+  }
+
 }
